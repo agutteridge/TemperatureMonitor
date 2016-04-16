@@ -6,11 +6,11 @@ DATABASE = 'pi_temps.db'
 
 # Inititalises the database with Readings table
 def init_db(db_name):
-    db = sqlite3.connect(
-        db_name,
-        detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)
+    db = sqlite3.connect(db_name, detect_types=sqlite3.PARSE_DECLTYPES)
     c = db.cursor()
-    c.execute('''CREATE TABLE Readings (Temp REAL, DateAndTime TIMESTAMP)''')
+    c.execute('''CREATE TABLE IF NOT EXISTS Readings
+        (Temp REAL, DateAndTime TIMESTAMP)''')
+    c.close()
     db.commit()
     return db
 
@@ -23,11 +23,20 @@ def get_db():
     return db
 
 
+def get_last_reading(db):
+    c = db.cursor()
+    c.execute('''SELECT * FROM Readings''')
+    result = c.fetchone()
+    c.close()
+    return result
+
+
 # Inserts row of data (temperature and timestamp) into Readings table
 def store_temp(db, temp_datetime):
     c = db.cursor()
     c.execute('''
         INSERT INTO Readings VALUES (?, ?)''', temp_datetime)
+    c.close()
     db.commit()
 
 
@@ -39,4 +48,6 @@ def fetch_24hrs(db):
         FROM Readings
         WHERE datetime("DateAndTime [TIMESTAMP]") >
             (datetime("now [TIMESTAMP]") - datetime('-1 day'))''')
-    return c.fetchall()
+    result = c.fetchall()
+    c.close()
+    return result
