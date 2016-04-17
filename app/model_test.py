@@ -1,8 +1,9 @@
 import unittest
 from unittest import TestCase
-import model
 import datetime
 from datetime import timedelta
+import model
+import daily
 
 current_time = datetime.datetime.now()
 
@@ -27,8 +28,8 @@ class Test(TestCase):
                 22.2,
                 current_time - timedelta(hours=25)])
         result = model.fetch_24hrs(self.test_db)
-        for r in result:
-            assert(result == [(22.2, current_time)])
+        print(result)
+        assert(result == [(22.2, current_time)])
 
     def test_fetch_24hrs_empty(self):
         model.store_temp(
@@ -37,6 +38,13 @@ class Test(TestCase):
                 current_time - timedelta(hours=25)])
         result = model.fetch_24hrs(self.test_db)
         assert(result == [])
+
+    def test_min_max_mean(self):
+        model.store_temp(self.test_db, [22.2, current_time])
+        model.store_temp(self.test_db, [22.4, current_time])
+        rows = model.fetch_24hrs(self.test_db)
+        result = daily.min_max_mean(rows)
+        assert(result == [22.2, 22.4, 22.3])
 
     def tearDown(self):
         c = self.test_db.cursor()
