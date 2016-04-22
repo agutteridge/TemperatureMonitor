@@ -24,9 +24,10 @@ def get_db():
     return db
 
 
+# Returns latest row of Readings table
 def get_last_reading(db):
     c = db.cursor()
-    c.execute('''SELECT * FROM Readings LIMIT 1''')
+    c.execute('''SELECT * FROM Readings ORDER BY DateAndTime DESC LIMIT 1''')
     result = c.fetchone()
     c.close()
     return result
@@ -48,4 +49,6 @@ def fetch_24hrs(db):
         SELECT *
         FROM Readings
         WHERE DATETIME(DateAndTime) > DATETIME('now', '-1 day')''')
-    return c.fetchall()
+    result = c.fetchall()
+    c.close()
+    return result
