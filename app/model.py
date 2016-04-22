@@ -43,7 +43,7 @@ def store_temp(db, temp_datetime):
 
 
 # Returns all rows containing temperature data from the last 24 hours
-def fetch_24hrs(db):
+def last_24hrs(db):
     c = db.cursor()
     c.execute('''
         SELECT *

@@ -3,7 +3,7 @@
 #
 # Daily set of functions to run
 # Writes mean, minimum and maximum temperatures of last 24 hours to new table
-# Deletes individual readings over 24 hours old
+# Deletes individual readings with date from day before yesterday
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 import model
 import statistics
@@ -28,10 +28,7 @@ def min_max_mean(rows):
 
 
 # Add day values to Days table
-def insert_day(db, day):
-    yesterday = (datetime.datetime.today() - timedelta(days=1)).strftime(
-        '%Y-%m-%d')
-    data = [yesterday] + day
+def insert_day(db, data):
     c = db.cursor()
     c.execute(
         '''CREATE TABLE IF NOT EXISTS Days
@@ -43,20 +40,23 @@ def insert_day(db, day):
     return 0
 
 
-# Deletes all rows with yesterday's date from the database
-def remove_yesterday(db):
-    yesterday = (datetime.datetime.today() - timedelta(days=1)).strftime(
+# Deletes all rows with day before yesterday's date from the database
+def remove_dby(db):
+    dby = (datetime.datetime.today() - timedelta(days=2)).strftime(
         '%Y-%m-%d')
     c = db.cursor()
     c.execute(
-        'DELETE FROM Readings WHERE DATE(DateAndTime) = (?)', (yesterday,))
+        'DELETE FROM Readings WHERE DATE(DateAndTime) = (?)', (dby,))
     db.commit()
     c.close()
 
 
 def run(db):
-    rows = model.fetch_24hrs(db)
+    rows = model.last_24hrs(db)
     day = min_max_mean(rows)
-    return_code = insert_day(db, day)
+    yesterday = (datetime.datetime.today() - timedelta(days=1)).strftime(
+        '%Y-%m-%d')
+    data = [yesterday] + day
+    return_code = insert_day(db, data)
     if return_code is 0:
-        remove_yesterday(db)
+        remove_dby(db)
