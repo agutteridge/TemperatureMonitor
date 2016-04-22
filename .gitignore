@@ -1,0 +1,6 @@
+.DS_Store
+test_db
+pi_temps
+__pycache__
+pi_config.py
+app_config.py
