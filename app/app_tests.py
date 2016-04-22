@@ -2,7 +2,9 @@ import unittest
 from unittest import TestCase
 import datetime
 from datetime import timedelta
-import model, daily, monthly
+import daily
+import monthly
+from model import Model
 
 current_time = datetime.datetime.now()
 
@@ -10,45 +12,43 @@ current_time = datetime.datetime.now()
 class Test(TestCase):
 
     def setUp(self):
-        self.test_db = model.init_db('test_db')
+        self.db_obj = Model('test_db')
+        self.test_db = self.db_obj.get_db()
 
     def test_store_temp(self):
-        model.store_temp(self.test_db, [22.2, current_time])
+        self.db_obj.store_temp([22.2, current_time])
         c = self.test_db.cursor()
         c.execute('''SELECT * FROM Readings''')
         result = c.fetchone()
         assert(result == (22.2, current_time))
 
     def test_last_24hrs(self):
-        model.store_temp(self.test_db, [22.2, current_time])
-        model.store_temp(
-            self.test_db, [
-                22.2,
-                current_time - timedelta(hours=25)])
-        result = model.last_24hrs(self.test_db)
+        self.db_obj.store_temp([22.2, current_time])
+        self.db_obj.store_temp(
+            [22.2,
+             current_time - timedelta(hours=25)])
+        result = self.db_obj.last_24hrs()
         assert(result == [(22.2, current_time)])
 
     def test_last_24hrs_empty(self):
-        model.store_temp(
-            self.test_db, [
-                22.2,
-                current_time - timedelta(hours=25)])
-        result = model.last_24hrs(self.test_db)
+        self.db_obj.store_temp(
+            [22.2,
+             current_time - timedelta(hours=25)])
+        result = self.db_obj.last_24hrs()
         assert(result == [])
 
     def test_get_last_reading(self):
-        model.store_temp(self.test_db, [22.2, current_time])
-        model.store_temp(
-            self.test_db, [
-                22.2,
-                current_time - timedelta(hours=25)])
-        result = model.get_last_reading(self.test_db)
+        self.db_obj.store_temp([22.2, current_time])
+        self.db_obj.store_temp(
+            [22.2,
+             current_time - timedelta(hours=25)])
+        result = self.db_obj.get_last_reading()
         assert(result == (22.2, current_time))
 
     def test_min_max_mean(self):
-        model.store_temp(self.test_db, [22.2, current_time])
-        model.store_temp(self.test_db, [22.4, current_time])
-        rows = model.last_24hrs(self.test_db)
+        self.db_obj.store_temp([22.2, current_time])
+        self.db_obj.store_temp([22.4, current_time])
+        rows = self.db_obj.last_24hrs()
         result = daily.min_max_mean(rows)
         assert(result == [22.2, 22.4, 22.3])
 
@@ -57,7 +57,7 @@ class Test(TestCase):
             datetime.date.today() -
             timedelta(days=1)).strftime('%Y-%m-%d')
         values = [yesterday, 20.0, 21.0, 20.2]
-        daily.insert_day(self.test_db, values)
+        self.db_obj.insert_day(values)
         c = self.test_db.cursor()
         c.execute('''SELECT * FROM Days''')
         result = c.fetchone()
@@ -66,12 +66,11 @@ class Test(TestCase):
         assert(list(result[1:4]) == [20.0, 21.0, 20.2])
 
     def test_remove_dby(self):
-        model.store_temp(self.test_db, [22.2, current_time])
-        model.store_temp(
-            self.test_db, [
-                22.2,
-                current_time - timedelta(days=2)])
-        daily.remove_dby(self.test_db)
+        self.db_obj.store_temp([22.2, current_time])
+        self.db_obj.store_temp(
+            [22.2,
+             current_time - timedelta(days=2)])
+        self.db_obj.remove_dby()
         c = self.test_db.cursor()
         c.execute('''SELECT * FROM Readings''')
         result = c.fetchall()
@@ -81,17 +80,17 @@ class Test(TestCase):
     def test_prev_month(self):
         dt = (datetime.date.today() - timedelta(days=30)).strftime('%Y-%m-%d')
         data1 = [dt, 20.0, 21.0, 20.3]
-        daily.insert_day(self.test_db, data1)
+        self.db_obj.insert_day(data1)
 
         today = datetime.date.today().strftime('%Y-%m-%d')
         data2 = [today, 20.0, 21.0, 20.3]
-        daily.insert_day(self.test_db, data2)
+        self.db_obj.insert_day(data2)
 
         b = (datetime.date.today() - timedelta(days=300)).strftime('%Y-%m-%d')
         data3 = [b, 20.0, 21.0, 20.3]
-        daily.insert_day(self.test_db, data3)
+        self.db_obj.insert_day(data3)
 
-        result = monthly.prev_month(self.test_db)
+        result = self.db_obj.prev_month(monthly.minus_month(1))
         assert(result[0][0].strftime('%Y-%m-%d') == dt)
         assert(list(result[0][1:4]) == [20.0, 21.0, 20.3])
 
@@ -101,13 +100,13 @@ class Test(TestCase):
     def test_remove_mbl(self):
         dt = (datetime.date.today() - timedelta(days=60)).strftime('%Y-%m-%d')
         data1 = [dt, 20.0, 21.0, 20.3]
-        daily.insert_day(self.test_db, data1)
+        self.db_obj.insert_day(data1)
 
         today = datetime.date.today().strftime('%Y-%m-%d')
         data2 = [today, 20.0, 21.0, 20.3]
-        daily.insert_day(self.test_db, data2)
+        self.db_obj.insert_day(data2)
 
-        result = monthly.remove_mbl(self.test_db)
+        result = self.db_obj.remove_mbl(monthly.minus_month(2))
         c = self.test_db.cursor()
         c.execute('''SELECT * FROM Days''')
         result = c.fetchall()

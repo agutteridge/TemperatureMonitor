@@ -29,17 +29,6 @@ def minus_month(num):
     return new_date
 
 
-# Returns all rows containing temperature data from last month
-def prev_month(db):
-    lm_date = minus_month(1)
-    c = db.cursor()
-    c.execute(
-        '''SELECT *
-           FROM Days
-           WHERE STRFTIME('%Y-%m', Date) = (?)''', (lm_date,))
-    return c.fetchall()
-
-
 # Writes a CSV file with min, max and mean temps for each day from last month
 def write_report(data):
     filename = datetime.datetime.now().strftime('%Y-%m (%B)')
@@ -50,17 +39,7 @@ def write_report(data):
         output.close()
 
 
-# Deletes all rows with month before last's date from the Days table
-def remove_mbl(db):
-    mbl = minus_month(2)
-    c = db.cursor()
-    c.execute(
-        '''DELETE FROM Days
-           WHERE STRFTIME('%Y-%m',Date) = (?)''', (mbl,))
-    db.commit()
-    c.close()
-
-
 def run(db):
-    rows = prev_month(db)
+    rows = db.prev_month(minus_month(1))
     write_report(rows)
+    db.remove_mbl(minus_month(2))
