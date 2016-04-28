@@ -1,7 +1,9 @@
 import unittest
 from unittest import TestCase
+
 import datetime
 from datetime import timedelta
+
 import daily
 import monthly
 from model import Model
@@ -13,14 +15,11 @@ class Test(TestCase):
 
     def setUp(self):
         self.db_obj = Model('test_db')
-        self.test_db = self.db_obj.get_db()
 
     def test_store_temp(self):
         self.db_obj.store_temp([22.2, current_time])
-        c = self.test_db.cursor()
-        c.execute('''SELECT * FROM Readings''')
-        result = c.fetchone()
-        assert(result == (22.2, current_time))
+        result = self.db_obj.get_all_readings()
+        assert(result[0] == (22.2, current_time))
 
     def test_last_24hrs(self):
         self.db_obj.store_temp([22.2, current_time])
@@ -58,12 +57,9 @@ class Test(TestCase):
             timedelta(days=1)).strftime('%Y-%m-%d')
         values = [yesterday, 20.0, 21.0, 20.2]
         self.db_obj.insert_day(values)
-        c = self.test_db.cursor()
-        c.execute('''SELECT * FROM Days''')
-        result = c.fetchone()
-        c.close()
-        assert(result[0].strftime('%Y-%m-%d') == yesterday)
-        assert(list(result[1:4]) == [20.0, 21.0, 20.2])
+        result = self.db_obj.get_all_days()
+        assert(result[0][0].strftime('%Y-%m-%d') == yesterday)
+        assert(list(result[0][1:4]) == [20.0, 21.0, 20.2])
 
     def test_remove_dby(self):
         self.db_obj.store_temp([22.2, current_time])
@@ -71,9 +67,7 @@ class Test(TestCase):
             [22.2,
              current_time - timedelta(days=2)])
         self.db_obj.remove_dby()
-        c = self.test_db.cursor()
-        c.execute('''SELECT * FROM Readings''')
-        result = c.fetchall()
+        result = self.db_obj.get_all_readings()
         assert(result == [(22.2, current_time)])
 
     # This test might fail on the first few days of some months!
@@ -106,20 +100,13 @@ class Test(TestCase):
         data2 = [today, 20.0, 21.0, 20.3]
         self.db_obj.insert_day(data2)
 
-        result = self.db_obj.remove_mbl(monthly.minus_month(2))
-        c = self.test_db.cursor()
-        c.execute('''SELECT * FROM Days''')
-        result = c.fetchall()
+        self.db_obj.remove_mbl(monthly.minus_month(2))
+        result = self.db_obj.get_all_days()
         assert(result[0][0].strftime('%Y-%m-%d') == today)
         assert(list(result[0][1:4]) == [20.0, 21.0, 20.3])
 
     def tearDown(self):
-        c = self.test_db.cursor()
-        c.execute('''DROP TABLE IF EXISTS Readings''')
-        c.execute('''DROP TABLE IF EXISTS Days''')
-        self.test_db.commit()
-        self.test_db.close()
-
+        del self.db_obj
 
 if __name__ == '__main__':
     unittest.main()
