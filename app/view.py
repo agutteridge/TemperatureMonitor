@@ -1,14 +1,15 @@
 from flask import Flask
 from flask import request
-import datetime
-import sys
+import os
 import json
+import datetime
 import daily
 import monthly
+import app_config
 from model import Model
 
 app = Flask(__name__)
-app.debug=True
+app.debug = True
 db = Model('pi_temps')
 
 
@@ -16,13 +17,16 @@ db = Model('pi_temps')
 def splash():
     last_reading = db.get_last_reading()
     if last_reading:
-        return str([last_reading[1].strftime('%H:%M %d-%m-%Y'), str(last_reading[0])])
+        return str([last_reading[1].strftime('%H:%M %d-%m-%Y'),
+                    str(last_reading[0])])
     else:
         return 'empty db!'
 
 
 @app.route('/data', methods=['POST'])
 def data():
+    timestamp = datetime.datetime.now()
+
     if request.method == 'POST':
         try:
             decoded_data = json.loads(request.data.decode('utf-8'))
@@ -40,8 +44,10 @@ def data():
 
             db.store_temp([temp, decoded_data['ts']])
 
-        except Exception:
-            print(sys.exc_info(), file=sys.stderr)
+        except Exception as e:
+            with open(os.path.join(app_config.output_path + 'errorlog.txt'), 'a') as f:
+                f.write(e)
+                f.close()
 
     return splash()
 

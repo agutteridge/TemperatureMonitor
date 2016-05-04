@@ -9,6 +9,7 @@ import sendgrid
 import requests
 import argparse
 import json
+import traceback
 
 # Global var for timestamp
 timestamp = datetime.datetime.now()
@@ -75,7 +76,7 @@ def trigger_email(recipient_list,
 
 def send_data(temp):
     try:
-        requests.post(
+        r = requests.post(
             pi_config.server_ip,
             data=(json.dumps({'temp': temp, 'ts': timestamp_string})))
     # If temperature is not successfully sent, it is recorded in logfile
@@ -95,7 +96,7 @@ def send_data(temp):
 
 
 def log_temp(temp):
-    with open('/home/pi/TemperatureLogger/templog.txt', 'a') as logfile:
+    with open('/home/pi/TemperatureMonitor/output/templog.txt', 'a') as logfile:
         # example: 1999-12-31 23:59:59    -20.2
         logfile.write(timestamp_string +
                       '\t' +

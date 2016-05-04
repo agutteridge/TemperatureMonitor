@@ -28,10 +28,11 @@ def min_max_mean(rows):
 
 def run(db):
     rows = db.last_24hrs()
-    day = min_max_mean(rows)
-    yesterday = (datetime.datetime.today() - timedelta(days=1)).strftime(
-        '%Y-%m-%d')
-    data = [yesterday] + day
-    return_code = db.insert_day(data)
-    if return_code is 0:
-        db.remove_dby()
+    if len(rows) > 1:
+        day = min_max_mean(rows)
+        yesterday = (datetime.datetime.today() - timedelta(days=1)).strftime(
+            '%Y-%m-%d')
+        data = [yesterday] + day
+        return_code = db.insert_day(data)
+        if return_code is 0:
+            db.remove_dby()

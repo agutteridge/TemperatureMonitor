@@ -19,6 +19,7 @@ class Test(TestCase):
     def test_store_temp(self):
         self.db_obj.store_temp([22.2, current_time])
         result = self.db_obj.get_all_readings()
+        print(result)
         assert(result[0] == (22.2, current_time))
 
     def test_last_24hrs(self):
@@ -106,7 +107,7 @@ class Test(TestCase):
         assert(list(result[0][1:4]) == [20.0, 21.0, 20.3])
 
     def tearDown(self):
-        del self.db_obj
+        self.db_obj.delete()
 
 if __name__ == '__main__':
     unittest.main()

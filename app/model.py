@@ -55,8 +55,8 @@ class Model():
 
     def get_last_day(self):
         exists = self.execute_query(
-            '''SELECT NAME 
-            FROM sqlite_master 
+            '''SELECT NAME
+            FROM sqlite_master
             WHERE type='table' AND name='Days'
             ''',
             fetch='one')
