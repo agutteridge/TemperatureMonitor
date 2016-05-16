@@ -63,7 +63,7 @@ class Model():
 
         if exists:
             result = self.execute_query(
-                'SELECT * FROM Days ORDER BY DateAndTime DESC LIMIT 1',
+                'SELECT * FROM Days ORDER BY Day DESC LIMIT 1',
                 fetch='one')
             return result
         else:
@@ -90,7 +90,7 @@ class Model():
     def insert_day(self, data):
         self.execute_query(
             '''CREATE TABLE IF NOT EXISTS Days
-               (Date DATE, Min REAL, Max REAL, Mean REAL)''',
+               (Day DATE, Min REAL, Max REAL, Mean REAL)''',
             commit=True)
         self.execute_query(
             'INSERT INTO Days VALUES (?, ?, ?, ?)',
@@ -106,12 +106,28 @@ class Model():
             data=(dby,),
             commit=True)
 
+    def all_days(self):
+        exists = self.execute_query(
+            '''SELECT NAME
+            FROM sqlite_master
+            WHERE type='table' AND name='Days'
+            ''',
+            fetch='one')
+
+        if exists:
+            result = self.execute_query(
+                'SELECT * FROM Days ORDER BY Day DESC LIMIT 1',
+                fetch='all')
+            return result
+        else:
+            return None
+
     # Returns all rows containing temperature data from last month
     def prev_month(self, query_month):
         result = self.execute_query(
             '''SELECT *
                FROM Days
-               WHERE STRFTIME('%Y-%m', Date) = (?)''',
+               WHERE STRFTIME('%Y-%m', Day) = (?)''',
             data=(query_month,),
             fetch='all')
         return result
@@ -120,7 +136,7 @@ class Model():
     def remove_mbl(self, query_month):
         self.execute_query(
             '''DELETE FROM Days
-               WHERE STRFTIME('%Y-%m',Date) = (?)''',
+               WHERE STRFTIME('%Y-%m', Day) = (?)''',
             data=(query_month,),
             commit=True)
 

@@ -9,7 +9,6 @@ import sendgrid
 import requests
 import argparse
 import json
-import traceback
 
 # Global var for timestamp
 timestamp = datetime.datetime.now()
@@ -81,13 +80,14 @@ def send_data(temp):
             data=(json.dumps({'temp': temp, 'ts': timestamp_string})))
     # If temperature is not successfully sent, it is recorded in logfile
     # An email is also sent
-    except Exception:
-        log_temp(temp)
+    except Exception as e:
+        log_temp(temp, e)
         # Set recipient addresses in config file. Format:
         # 'Santa <mrclaus@northpole.com>'
         recipient_list = [pi_config.recipient1]
         subject = 'RASPBERRY PI ERROR'
-        text = ('The Raspberry Pi could not complete a temperature read.' +
+        text = ('The Raspberry Pi could not complete a temperature read.\n' +
+                str(e) + '\n' +
                 'The last recorded temperature was ' + str(temp) + '.')
 
         trigger_email(recipient_list,
@@ -95,7 +95,7 @@ def send_data(temp):
                       text)
 
 
-def log_temp(temp):
+def log_temp(temp, e):
     with open('/home/pi/TemperatureMonitor/output/templog.txt', 'a') as logfile:
         # example: 1999-12-31 23:59:59    -20.2
         logfile.write(timestamp_string +
@@ -103,6 +103,11 @@ def log_temp(temp):
                       str(temp) +
                       '\n')
         logfile.close()
+
+    with open('/home/pi/TemperatureMonitor/output/errorlog.txt', 'a') as ef:
+        # example: 1999-12-31 23:59:59    -20.2
+        ef.write(str(e) + '\n')
+        ef.close()
 
 
 def main(shell_args):

@@ -7,9 +7,10 @@ import daily
 import monthly
 import app_config
 from model import Model
+import re
 
 app = Flask(__name__)
-app.debug = True
+# app.debug = True
 db = Model('pi_temps')
 
 
@@ -46,16 +47,32 @@ def data():
 
         except Exception as e:
             with open(os.path.join(app_config.output_path + 'errorlog.txt'), 'a') as f:
-                f.write(e)
+                f.write('error in view.py: ' + str(e) + '\n')
                 f.close()
 
     return splash()
+
+
+@app.route('/report/<month_year>', methods=['GET'])
+def reports(month_year):
+    pattern = re.compile(r'\A\d\d-\d\d\Z')
+    if pattern.match(month_year):
+        print('yay')
+    else:
+        print('boo')
 
 
 # Teardown function for when app context closes
 def teardown_appcontext(e):
     if db is not None:
         db.close()
+
+if not app.debug:
+    import logging
+    from logging import FileHandler
+    file_handler = FileHandler('app.log')
+    file_handler.setLevel(logging.WARNING)
+    app.logger.addHandler(file_handler)
 
 if __name__ == '__main__':
     app.run(debug=True)

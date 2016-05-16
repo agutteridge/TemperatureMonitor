@@ -63,13 +63,20 @@ class Test(TestCase):
         assert(list(result[0][1:4]) == [20.0, 21.0, 20.2])
 
     def test_remove_dby(self):
-        self.db_obj.store_temp([22.2, current_time])
-        self.db_obj.store_temp(
-            [22.2,
-             current_time - timedelta(days=2)])
+        yesterday = (
+            datetime.date.today() -
+            timedelta(days=1)).strftime('%Y-%m-%d')
+        values1 = [yesterday, 20.0, 21.0, 20.2]
+        dby = (
+            datetime.date.today() -
+            timedelta(days=2)).strftime('%Y-%m-%d')
+        values2 = [dby, 19.0, 22.0, 20.5]
+        self.db_obj.insert_day(values1)
+        self.db_obj.insert_day(values2)
         self.db_obj.remove_dby()
-        result = self.db_obj.get_all_readings()
-        assert(result == [(22.2, current_time)])
+        result = self.db_obj.all_days()
+        assert(result[0][0].strftime('%Y-%m-%d') == yesterday)
+        assert(list(result[0][1:4]) == [20.0, 21.0, 20.2])
 
     # This test might fail on the first few days of some months!
     def test_prev_month(self):
