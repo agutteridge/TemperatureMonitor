@@ -1,6 +1,4 @@
 import sqlite3
-import datetime
-from datetime import timedelta
 
 
 class Model():
@@ -40,12 +38,6 @@ class Model():
             fetch='all')
         return result
 
-    def get_all_days(self):
-        result = self.execute_query(
-            'SELECT * FROM Days',
-            fetch='all')
-        return result
-
     # Returns latest row of Readings table
     def get_last_reading(self):
         result = self.execute_query(
@@ -82,7 +74,7 @@ class Model():
         result = self.execute_query(
             '''SELECT *
                FROM Readings
-               WHERE DATETIME(DateAndTime) > DATETIME('now', '-1 day')''',
+               WHERE DATETIME(DateAndTime) >= DATETIME('now', '-23 hours')''',
             fetch='all')
         return result
 
@@ -98,15 +90,14 @@ class Model():
             commit=True)
 
     # Deletes all rows with day before yesterday's date from the database
-    def remove_dby(self):
-        dby = (datetime.datetime.today() - timedelta(days=2)).strftime(
-            '%Y-%m-%d')
+    def remove_old_readings(self):
         self.execute_query(
-            'DELETE FROM Readings WHERE DATE(DateAndTime) = (?)',
-            data=(dby,),
+            '''DELETE
+               FROM Readings
+               WHERE DATETIME(DateAndTime) <= DATETIME('now', '-24 hours')''',
             commit=True)
 
-    def all_days(self):
+    def get_all_days(self):
         exists = self.execute_query(
             '''SELECT NAME
             FROM sqlite_master
@@ -122,8 +113,8 @@ class Model():
         else:
             return None
 
-    # Returns all rows containing temperature data from last month
-    def prev_month(self, query_month):
+    # Returns all rows containing temperature data from specified month
+    def get_month(self, query_month):
         result = self.execute_query(
             '''SELECT *
                FROM Days
@@ -132,8 +123,8 @@ class Model():
             fetch='all')
         return result
 
-    # Deletes all rows with month before last's date from the Days table
-    def remove_mbl(self, query_month):
+    # Deletes all rows with specified month
+    def remove_days(self, query_month):
         self.execute_query(
             '''DELETE FROM Days
                WHERE STRFTIME('%Y-%m', Day) = (?)''',
