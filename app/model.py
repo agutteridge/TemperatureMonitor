@@ -88,6 +88,7 @@ class Model():
             'INSERT INTO Days VALUES (?, ?, ?, ?)',
             data=data,
             commit=True)
+        return True
 
     # Deletes all rows with day before yesterday's date from the database
     def remove_old_readings(self):

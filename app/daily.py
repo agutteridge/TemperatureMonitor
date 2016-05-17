@@ -31,12 +31,10 @@ def run(db):
     try:
         if len(rows) > 1:
             day = min_max_mean(rows)
-            yesterday = (datetime.datetime.today() - timedelta(days=1)).strftime(
-                '%Y-%m-%d')
-            data = [yesterday] + day
-            return_code = db.insert_day(data)
-            if return_code is 0:
-                db.remove_dby()
+            data = [datetime.date.today() - timedelta(days=1)] + day
+            success = db.insert_day(data)
+            if success:
+                db.remove_old_readings()
     except Exception as e:
         with open(os.path.join(app_config.output_path + 'errorlog.txt'), 'a') as f:
             f.write('error in daily.py: ' + str(e) + '\n')

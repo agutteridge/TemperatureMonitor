@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+	  <meta charset="utf-8">
+		<link rel="stylesheet" type="text/css" href="{{url_for('static', filename='css/index.css')}}">
+	</head>
+
+	<body>
+		<div>
+	  	<h1>Is it cold in here?</h1>
+	  </div>
+		<div class="bigbox">
+		  <section class="tempbox">
+		    <p>
+			  	{% if data %}
+				  Last read at {{ data.date }}
+				  <br>
+				  <br>
+				  Temperature: {{ data.temp }}&#x2103; &#x2603;
+					{% endif %}
+		    </p>
+		  </section>
+		</div>
+	</body>
+</html>

@@ -1,0 +1,27 @@
+@import url(https://fonts.googleapis.com/css?family=Frijole&effect=font-effect-anaglyph);
+
+.bigbox {
+	display: flex;
+	flex-direction:	column;
+	flex-wrap: nowrap;
+	justify-content: space-around;
+	align-items: center;
+	display: -webkit-flex; /* Safari */
+	-webkit-flex-direction: column; /* Safari */
+	-webkit-flex-wrap: nowrap; /* Safari */
+	-webkit-justify-content: space-around; /* Safari */
+	-webkit-align-items: center; /* Safari */
+}
+
+.tempbox {
+	font-family: sans-serif;
+	font-size: 20px;
+	text-align: center;
+}
+
+h1 {
+	font-family: 'Frijole', sans-serif;
+	font-size: 72px;
+	text-align: center;
+
+}

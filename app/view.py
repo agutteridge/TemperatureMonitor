@@ -1,25 +1,29 @@
-from flask import Flask
-from flask import request
 import os
 import json
 import datetime
+import re
+# Flask imports
+from flask import Flask, request, jsonify, render_template
+# module imports
 import daily
 import monthly
 import app_config
 from model import Model
-import re
 
-app = Flask(__name__)
-# app.debug = True
+app = Flask(__name__,
+            template_folder='./templates',
+            static_folder='./static')
 db = Model('pi_temps')
 
 
 @app.route('/')
-def splash():
+def index():
     last_reading = db.get_last_reading()
     if last_reading:
-        return str([last_reading[1].strftime('%H:%M %d-%m-%Y'),
-                    str(last_reading[0])])
+        data = {
+            'date': last_reading[1].strftime('%H:%M %d-%m-%Y'),
+            'temp': str(last_reading[0])}
+        return render_template('index.html', data=data)
     else:
         return 'empty db!'
 
@@ -40,17 +44,17 @@ def data():
                     daily.run(db)
 
             if last_day:
-                if last_day[1].month != timestamp.month:
+                if last_day[0].month != timestamp.month:
                     monthly.run(db)
 
             db.store_temp([temp, decoded_data['ts']])
 
         except Exception as e:
             with open(os.path.join(app_config.output_path + 'errorlog.txt'), 'a') as f:
-                f.write('error in view.py: ' + str(e) + '\n')
+                f.write('exception: ' + str(e) + '\n')
                 f.close()
 
-    return splash()
+    return jsonify({'success': True})
 
 
 @app.route('/report/<month_year>', methods=['GET'])

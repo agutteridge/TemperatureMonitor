@@ -89,9 +89,16 @@ class Test(TestCase):
 
         daily.run(self.db_obj)
         in_days = self.db_obj.get_all_days()
-
+        readings = self.db_obj.get_all_readings()
         self.assertEqual(in_days[0][0], yesterday.date())
-        # TO DO: more tests! 
+        self.assertEqual(len(readings), 4)
+
+    def test_monthly(self):
+        for day in range(1, 30):
+            values1 = [datetime.date(2016, 4, day), day, 22.0, 20.5]
+            self.db_obj.insert_day(values1)
+
+        monthly.run(self.db_obj)
 
     def tearDown(self):
         self.db_obj.delete()
