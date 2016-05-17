@@ -1,3 +1,4 @@
+app.log
 *.txt
 .DS_Store
 test_db

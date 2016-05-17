@@ -3,14 +3,16 @@
   <head>
 	  <meta charset="utf-8">
 		<link rel="stylesheet" type="text/css" href="{{url_for('static', filename='css/index.css')}}">
-	</head>
+		<!-- Plotly.js -->
+ 		<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+ 	</head>
 
 	<body>
 		<div>
 	  	<h1>Is it cold in here?</h1>
 	  </div>
-		<div class="bigbox">
-		  <section class="tempbox">
+		<div class="big-box">
+		  <section class="temp-box">
 		    <p>
 			  	{% if data %}
 				  Last read at {{ data.date }}
@@ -20,6 +22,13 @@
 					{% endif %}
 		    </p>
 		  </section>
+		  <section class="graph-box">
+		  	<div id="graph-canvas">
+		  		<!-- Plotly chart will be drawn inside this DIV -->
+	  		</div>
+		  </section>
 		</div>
+    <!-- JavaScript for Plotly graph -->
+    <script src="{{url_for('static', filename='js/plotly.js')}}" type="text/javascript"></script>
 	</body>
 </html>

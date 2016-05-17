@@ -57,6 +57,24 @@ def data():
     return jsonify({'success': True})
 
 
+@app.route('/daygraph', methods=['GET'])
+def twentyfour():
+        data = db.last_24hrs()
+        x = list()
+        y = list()
+
+        for d in data:
+            x.append(d[1].strftime('%Y-%m-%d %H:%M:%S'))
+            y.append(d[0])
+
+        formatted_data = {
+            'x': x,
+            'y': y,
+            'type': 'scatter'
+        }
+        return jsonify(formatted_data)
+
+
 @app.route('/report/<month_year>', methods=['GET'])
 def reports(month_year):
     pattern = re.compile(r'\A\d\d-\d\d\Z')

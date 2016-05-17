@@ -1,6 +1,6 @@
-@import url(https://fonts.googleapis.com/css?family=Frijole&effect=font-effect-anaglyph);
+@import url(https://fonts.googleapis.com/css?family=Frijole);
 
-.bigbox {
+.big-box {
 	display: flex;
 	flex-direction:	column;
 	flex-wrap: nowrap;
@@ -13,7 +13,7 @@
 	-webkit-align-items: center; /* Safari */
 }
 
-.tempbox {
+.temp-box {
 	font-family: sans-serif;
 	font-size: 20px;
 	text-align: center;
@@ -25,3 +25,4 @@ h1 {
 	text-align: center;
 
 }
+
