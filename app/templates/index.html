@@ -6,19 +6,23 @@
 		<!-- Plotly.js -->
  		<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
  	</head>
-
 	<body>
-		<div>
-	  	<h1>Is it cold in here?</h1>
-	  </div>
 		<div class="big-box">
+		<section class="header-box">
+	  	<h1>PiFreezer</h1>
+	  </section>
 		  <section class="temp-box">
 		    <p>
 			  	{% if data %}
-				  Last read at {{ data.date }}
-				  <br>
-				  <br>
-				  Temperature: {{ data.temp }}&#x2103; &#x2603;
+					  Last read at {{ data.date }}
+
+					  <br>
+					  Temperature: {{ data.temp }}&#xb0;C
+					  <br>
+					  <br>
+					  &#x2603;
+					{% else %}
+						Uh-oh, the database appears to be empty..?!
 					{% endif %}
 		    </p>
 		  </section>

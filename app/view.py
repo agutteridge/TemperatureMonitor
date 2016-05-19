@@ -2,6 +2,7 @@ import os
 import json
 import datetime
 import re
+import random
 # Flask imports
 from flask import Flask, request, jsonify, render_template
 # module imports
@@ -13,7 +14,8 @@ from model import Model
 app = Flask(__name__,
             template_folder='./templates',
             static_folder='./static')
-db = Model('pi_temps')
+app.debug = True
+db = Model('test_db')
 
 
 @app.route('/')
@@ -25,7 +27,7 @@ def index():
             'temp': str(last_reading[0])}
         return render_template('index.html', data=data)
     else:
-        return 'empty db!'
+        return render_template('index.html', data=None)
 
 
 @app.route('/data', methods=['POST'])
@@ -89,7 +91,14 @@ def teardown_appcontext(e):
     if db is not None:
         db.close()
 
-if not app.debug:
+if app.debug:
+    db.store_temp([random.uniform(-30, 30), datetime.datetime.now()])
+    db.insert_day([datetime.date.today(),
+                   random.uniform(-30, 30),
+                   random.uniform(-30, 30),
+                   random.uniform(-30, 30)])
+else:
+    db = Model('pi_temps')
     import logging
     from logging import FileHandler
     file_handler = FileHandler('app.log')
@@ -97,4 +106,4 @@ if not app.debug:
     app.logger.addHandler(file_handler)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
