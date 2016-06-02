@@ -1,0 +1,34 @@
+<html>
+    <head>
+    </head>
+    <body>
+    {% block body %}
+        <h2>UCL/UCLH Biobank for Studying Health and Disease</h2>
+        Room: Shropshire House, Main lab
+        Fridge/Freezer: Freezer
+        Month: {% month %}
+        <br>
+        <table width="100%" cellpadding="4" cellspacing="0">
+            <tbody>
+                <tr>
+                    <th>Date</th>
+                    <th>Mean temp (&#xb0;C)</th>
+                    <th>Minimum temp (&#xb0;C)</th>
+                    <th>Max temp (&#xb0;C)</th>
+                    <th>Remarks</th>
+                </tr>
+            </tbody>
+            <tbody>
+                <tr style="border: 1px solid #000000;">
+                    <td width="100%">
+                        <h3 style="text-align: center;">Some subtitle</h3>
+                        <div>{{ g.user.get('user_attribute') }}</div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <hr style="margin: 3em 0;"/>
+        <img src="{{ url_for('static', filename='img.png', _external=True) }}" />
+    {% endblock %}
+    </body>
+</html>

@@ -39,8 +39,7 @@ httpGetAsync(document.baseURI + "daygraph", function(temp_data){
     Plotly.plot(
       document.getElementById("graph-canvas"),
       data,
-      layout,
-      {staticPlot: true}
+      layout
     );
   }
 })

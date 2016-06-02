@@ -1,11 +1,13 @@
 import os
 import json
 import datetime
+from datetime import timedelta
 import re
 import random
-# Flask imports
+
 from flask import Flask, request, jsonify, render_template
-# module imports
+from flask_mail import Mail, Message
+
 import daily
 import monthly
 import app_config
@@ -15,12 +17,23 @@ app = Flask(__name__,
             template_folder='./templates',
             static_folder='./static')
 app.debug = True
-db = Model('test_db')
+app.config.update(dict(
+    DEBUG=True,
+    MAIL_SERVER=app_config.MAIL_SERVER,
+    MAIL_PORT=app_config.MAIL_PORT,
+    MAIL_USE_TLS=False,
+    MAIL_USE_SSL=True,
+    MAIL_USERNAME=app_config.MAIL_USERNAME,
+    MAIL_PASSWORD=app_config.MAIL_PASSWORD,
+))
+db = Model('pi_temps')
+_last_alert = datetime.datetime(1970, 1, 1)  # default when app starts
 
 
 @app.route('/')
 def index():
     last_reading = db.get_last_reading()
+
     if last_reading:
         data = {
             'date': last_reading[1].strftime('%H:%M %d-%m-%Y'),
@@ -51,8 +64,32 @@ def data():
 
             db.store_temp([temp, decoded_data['ts']])
 
+            global _last_alert
+            if temp > -10 and timestamp - timedelta(hours=1) > _last_alert:
+                    subject = 'ALERT'
+                    body = ('The temperature is at ' + str(temp) + '\'C')
+                    send_email(subject, body)
+                    _last_alert = timestamp  # replaces time of last alert
+
         except Exception as e:
-            with open(os.path.join(app_config.output_path + 'errorlog.txt'), 'a') as f:
+            with open(os.path.join(os.getcwd() + 'errorlog.txt'), 'a') as f:
+                f.write('exception: ' + str(e) + '\n')
+                f.close()
+
+    return jsonify({'success': True})
+
+
+@app.route('/batch', methods=['POST'])
+def batch():
+    if request.method == 'POST':
+        try:
+            decoded_data = json.loads(request.data.decode('utf-8'))
+            for r in decoded_data:
+                temp = float(r['temp'])
+                db.store_temp([temp, r['ts']])
+
+        except Exception as e:
+            with open(os.path.join(os.getcwd() + 'errorlog.txt'), 'a') as f:
                 f.write('exception: ' + str(e) + '\n')
                 f.close()
 
@@ -86,12 +123,23 @@ def reports(month_year):
         print('boo')
 
 
+def send_email(subject, body):
+    mail_ext = Mail(app)
+    mail_to_be_sent = Message(
+        subject=subject,
+        recipients=app_config.recipients,
+        sender=app_config.sender)
+    mail_to_be_sent.body = body
+    mail_ext.send(mail_to_be_sent)
+
+
 # Teardown function for when app context closes
 def teardown_appcontext(e):
     if db is not None:
         db.close()
 
 if app.debug:
+    db = Model('test_db')
     db.store_temp([random.uniform(-30, 30), datetime.datetime.now()])
     db.insert_day([datetime.date.today(),
                    random.uniform(-30, 30),
