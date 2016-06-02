@@ -108,7 +108,7 @@ class Model():
 
         if exists:
             result = self.execute_query(
-                'SELECT * FROM Days ORDER BY Day DESC LIMIT 1',
+                'SELECT * FROM Days ORDER BY Day',
                 fetch='all')
             return result
         else:
