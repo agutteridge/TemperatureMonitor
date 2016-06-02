@@ -4,15 +4,17 @@
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 import datetime
-import pi_config
-import sendgrid
 import requests
 import argparse
 import json
 
+from pi_db import Pidb
+import pi_config
+
 # Global var for timestamp
 timestamp = datetime.datetime.now()
 timestamp_string = timestamp.strftime('%Y-%m-%d %H:%M:%S')
+db = Pidb('pi_db')
 
 
 def read_temp_file():
@@ -36,73 +38,43 @@ def read_temp():
 
     try:
         temp = read_temp_file()
-
-        if temp > -10:  # Change this value as required
-            # Set recipient addresses in config file. Format:
-            # 'Santa <mrclaus@northpole.com>'
-            recipient_list = [pi_config.recipient1]
-            subject = 'ALERT'
-            text = ('The temperature is at ' + str(temp) + '\'C')
-
-            trigger_email(recipient_list,
-                          subject,
-                          text)
-
         return temp
 
     except Exception:
         return 'nodata'
 
 
-def trigger_email(recipient_list,
-                  subject,
-                  text):
-    # Set SendGrid API Key in config file
-    sg = sendgrid.SendGridClient(pi_config.sendgrid_key)
-    message = sendgrid.Mail()
-
-    for r in recipient_list:
-        message.add_to(r)
-
-    message.set_subject(subject)
-    message.set_html(text)
-    message.set_text(text)
-    # Set sender address in config file. Format:
-    # 'Santa <mrclaus@northpole.com>'
-    message.set_from(pi_config.sender)
-    status, msg = sg.send(message)
-
-
 def send_data(temp):
     try:
-        r = requests.post(
-            pi_config.server_ip,
+        # send most recent reading
+        single_r = requests.post(
+            pi_config.post_single,
             data=(json.dumps({'temp': temp, 'ts': timestamp_string})))
-    # If temperature is not successfully sent, it is recorded in logfile
-    # An email is also sent
+
+        if not single_r.data.decode('utf-8')['success']:
+            raise Exception('success not received (single)')
+
+        # rows in db that need to be sent
+        rows = db.get_all_readings()
+        if rows:
+            multi_r = requests.post(
+                pi_config.post_multiple,
+                data=(json.dumps(rows)))
+
+            # Data sent successfully
+            if multi_r.data.decode('utf-8')['success']:
+                db.delete()
+            else:
+                raise Exception('success not received (multi)')
+
+    # If temperature is not successfully sent, it is stored in local db
+    # an error log is also written to
     except Exception as e:
         log_temp(temp, e)
-        # Set recipient addresses in config file. Format:
-        # 'Santa <mrclaus@northpole.com>'
-        recipient_list = [pi_config.recipient1]
-        subject = 'RASPBERRY PI ERROR'
-        text = ('The Raspberry Pi could not complete a temperature read.\n' +
-                str(e) + '\n' +
-                'The last recorded temperature was ' + str(temp) + '.')
-
-        trigger_email(recipient_list,
-                      subject,
-                      text)
 
 
 def log_temp(temp, e):
-    with open('/home/pi/TemperatureMonitor/output/templog.txt', 'a') as logfile:
-        # example: 1999-12-31 23:59:59    -20.2
-        logfile.write(timestamp_string +
-                      '\t' +
-                      str(temp) +
-                      '\n')
-        logfile.close()
+    db.store_temp([temp, timestamp_string])
 
     with open('/home/pi/TemperatureMonitor/output/errorlog.txt', 'a') as ef:
         # example: 1999-12-31 23:59:59    -20.2
