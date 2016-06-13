@@ -30,7 +30,7 @@ if __name__ == '__main__':
     last_reading = db.get_last_reading()
     if last_reading:
         if last_reading[1] < datetime.datetime.now() - timedelta(hours=1):
-            trigger_email([app_config.recipient1],
+            trigger_email(app_config.recipients,
                           'ALERT: No reads in the last hour',
                           'Last read was %s\'C at %s' %
                           (str(last_reading[0]),
