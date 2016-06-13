@@ -16,7 +16,6 @@ app = Flask(__name__,
             static_folder='./static')
 app.debug = True
 app.config.update(dict(
-    DEBUG=True,
     MAIL_SERVER=app_config.MAIL_SERVER,
     MAIL_PORT=app_config.MAIL_PORT,
     MAIL_USE_TLS=False,

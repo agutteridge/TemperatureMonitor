@@ -4,8 +4,8 @@ import os
 import datetime
 from datetime import timedelta
 
-from app import daily, model, monthly, app_config
-from app.model import Model
+import daily, model, monthly, app_config
+from model import Model
 
 current_time = datetime.datetime.now()
 yesterday = current_time - timedelta(days=1)
@@ -94,7 +94,7 @@ class Test(TestCase):
 
     def test_monthly(self):
         for day in range(1, 30):
-            values1 = [datetime.date(2016, 4, day), day, 22.0, 20.5]
+            values1 = [datetime.date(2016, current_time.month - 1, day), day, 22.0, 20.5]
             self.db_obj.insert_day(values1)
 
         monthly.run(self.db_obj)
