@@ -8,9 +8,7 @@ import random
 from flask import Flask, request, jsonify, render_template
 from flask_mail import Mail, Message
 
-import daily
-import monthly
-import app_config
+import daily, monthly, app_config, model
 from model import Model
 
 app = Flask(__name__,
@@ -26,7 +24,6 @@ app.config.update(dict(
     MAIL_USERNAME=app_config.MAIL_USERNAME,
     MAIL_PASSWORD=app_config.MAIL_PASSWORD,
 ))
-db = Model('pi_temps')
 _last_alert = datetime.datetime(1970, 1, 1)  # default when app starts
 
 
@@ -98,20 +95,20 @@ def batch():
 
 @app.route('/daygraph', methods=['GET'])
 def twentyfour():
-        data = db.last_24hrs()
-        x = list()
-        y = list()
+    data = db.last_24hrs()
+    x = list()
+    y = list()
 
-        for d in data:
-            x.append(d[1].strftime('%Y-%m-%d %H:%M:%S'))
-            y.append(d[0])
+    for d in data:
+        x.append(d[1].strftime('%Y-%m-%d %H:%M:%S'))
+        y.append(d[0])
 
-        formatted_data = {
-            'x': x,
-            'y': y,
-            'type': 'scatter'
-        }
-        return jsonify(formatted_data)
+    formatted_data = {
+        'x': x,
+        'y': y,
+        'type': 'scatter'
+    }
+    return jsonify(formatted_data)
 
 
 @app.route('/report/<month_year>', methods=['GET'])
@@ -140,11 +137,11 @@ def teardown_appcontext(e):
 
 if app.debug:
     db = Model('test_db')
-    db.store_temp([random.uniform(-30, 30), datetime.datetime.now()])
-    db.insert_day([datetime.date.today(),
-                   random.uniform(-30, 30),
-                   random.uniform(-30, 30),
-                   random.uniform(-30, 30)])
+    # db.store_temp([random.uniform(-30, 30), datetime.datetime.now()])
+    # db.insert_day([datetime.date.today(),
+    #                random.uniform(-30, 30),
+    #                random.uniform(-30, 30),
+    #                random.uniform(-30, 30)])
 else:
     db = Model('pi_temps')
     import logging

@@ -1,12 +1,11 @@
 import unittest
 from unittest import TestCase
-
+import os
 import datetime
 from datetime import timedelta
 
-import daily
-import monthly
-from model import Model
+from app import daily, model, monthly, app_config
+from app.model import Model
 
 current_time = datetime.datetime.now()
 yesterday = current_time - timedelta(days=1)
@@ -23,10 +22,10 @@ class Test(TestCase):
         self.assertEqual(result[0], (22.2, current_time))
 
     def test_last_24hrs(self):
-        self.db_obj.store_temp([22.2, yesterday])
+        self.db_obj.store_temp([22.2, current_time])
         self.db_obj.store_temp([33.3, yesterday - timedelta(seconds=1)])
         result = self.db_obj.last_24hrs()
-        self.assertEqual(result, [(22.2, yesterday)])
+        self.assertEqual(result, [(22.2, current_time)])
 
     def test_get_last_reading(self):
         self.db_obj.store_temp([22.2, current_time])
@@ -102,6 +101,7 @@ class Test(TestCase):
 
     def tearDown(self):
         self.db_obj.delete()
+        os.remove(os.getcwd() + '/test_db')
 
 if __name__ == '__main__':
     unittest.main()
