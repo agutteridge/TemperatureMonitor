@@ -23,6 +23,8 @@ class Pidb():
                 c.execute(query)
             if commit:
                 db.commit()
+            if fetch is 'one':
+                return c.fetchone()
             if fetch is 'all':
                 return c.fetchall()
             elif fetch is not 'no':
@@ -31,10 +33,20 @@ class Pidb():
             c.close()
 
     def get_all_readings(self):
-        result = self.execute_query(
-            'SELECT * FROM Readings',
-            fetch='all')
-        return result
+        exists = self.execute_query(
+            '''SELECT NAME
+            FROM sqlite_master
+            WHERE type='table' AND name='Readings'
+            ''',
+            fetch='one')
+
+        if exists:
+            result = self.execute_query(
+                'SELECT * FROM Readings',
+                fetch='all')
+            return result
+        else:
+            return []
 
     # Inserts row of data (temperature and timestamp) into Readings table
     def store_temp(self, temp_datetime):
