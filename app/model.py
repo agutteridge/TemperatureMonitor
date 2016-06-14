@@ -9,6 +9,14 @@ class Model():
             '''CREATE TABLE IF NOT EXISTS Readings
             (Temp REAL, DateAndTime TIMESTAMP)''',
             commit=True)
+        self.execute_query(
+            '''CREATE TABLE IF NOT EXISTS Days
+               (Day DATE, Min REAL, Max REAL, Mean REAL)''',
+            commit=True)
+
+    def check_if_str(self, obj):
+        if type(obj) is not str:
+            raise Exception('pass in a strftime string please')
 
     def execute_query(self, query, data=None, commit=False, fetch='no'):
         db = sqlite3.connect(
@@ -46,20 +54,10 @@ class Model():
         return result
 
     def get_last_day(self):
-        exists = self.execute_query(
-            '''SELECT NAME
-            FROM sqlite_master
-            WHERE type='table' AND name='Days'
-            ''',
+        result = self.execute_query(
+            'SELECT * FROM Days ORDER BY Day DESC LIMIT 1',
             fetch='one')
-
-        if exists:
-            result = self.execute_query(
-                'SELECT * FROM Days ORDER BY Day DESC LIMIT 1',
-                fetch='one')
-            return result
-        else:
-            return None
+        return result
 
     # Inserts row of data (temperature and timestamp) into Readings table
     def store_temp(self, temp_datetime):
@@ -74,45 +72,59 @@ class Model():
         result = self.execute_query(
             '''SELECT *
                FROM Readings
-               WHERE DATETIME(DateAndTime) >= DATETIME('now', '-23 hours')''',
+               WHERE DATETIME(DateAndTime) >= DATETIME('now', '-23 hours')
+               ORDER BY DateAndTime''',
             fetch='all')
         return result
 
     # Add day values to Days table
     def insert_day(self, data):
         self.execute_query(
-            '''CREATE TABLE IF NOT EXISTS Days
-               (Day DATE, Min REAL, Max REAL, Mean REAL)''',
-            commit=True)
-        self.execute_query(
             'INSERT INTO Days VALUES (?, ?, ?, ?)',
             data=data,
             commit=True)
         return True
 
-    # Deletes all rows with day before yesterday's date from the database
-    def remove_old_readings(self):
+    # Deletes all rows with specific date from the database
+    def delete_readings(self, query_day):
+        self.check_if_str(query_day)
+
         self.execute_query(
-            '''DELETE
-               FROM Readings
-               WHERE DATETIME(DateAndTime) <= DATETIME('now', '-24 hours')''',
+            '''DELETE FROM Readings
+               WHERE STRFTIME('%Y-%m-%d', DateAndTime) = (?)''',
+            data=(query_day,),
             commit=True)
+        return True
 
     def get_all_days(self):
-        exists = self.execute_query(
-            '''SELECT NAME
-            FROM sqlite_master
-            WHERE type='table' AND name='Days'
-            ''',
-            fetch='one')
+        result = self.execute_query(
+            'SELECT * FROM Days ORDER BY Day',
+            fetch='all')
+        return result
 
-        if exists:
-            result = self.execute_query(
-                'SELECT * FROM Days ORDER BY Day',
-                fetch='all')
-            return result
-        else:
-            return None
+    # retrieve rows from Readings table
+    def get_readings_specific_day(self, query_day):
+        self.check_if_str(query_day)
+
+        result = self.execute_query(
+            '''SELECT *
+               FROM Readings
+               WHERE STRFTIME('%Y-%m-%d', DateAndTime) = (?)''',
+            data=(query_day,),
+            fetch='all')
+        return result
+
+    # retrieve single row (or empty list) from Days table
+    def get_day(self, query_day):
+        self.check_if_str(query_day)
+
+        result = self.execute_query(
+            '''SELECT *
+               FROM Days
+               WHERE STRFTIME('%Y-%m-%d', Day) = (?)''',
+            data=(query_day,),
+            fetch='all')
+        return result
 
     # Returns all rows containing temperature data from specified month
     def get_month(self, query_month):
@@ -131,6 +143,7 @@ class Model():
                WHERE STRFTIME('%Y-%m', Day) = (?)''',
             data=(query_month,),
             commit=True)
+        return True
 
     # Testing only, teardown
     def delete(self):
@@ -140,3 +153,4 @@ class Model():
         self.execute_query(
             'DROP TABLE IF EXISTS Days',
             commit=True)
+        return True
