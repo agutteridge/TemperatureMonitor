@@ -6,8 +6,6 @@
 # Deletes individual readings with date from day before yesterday
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 import statistics
-import datetime
-from datetime import timedelta
 
 
 # Calculate the mean, minimum and maximum temperatures for the last 24 hours
@@ -19,23 +17,38 @@ def min_max_mean(rows):
     for temp, date in rows:
         temps.append(temp)
     mean = float("{0:.1f}".format(statistics.mean(temps)))
-    return [
-        minimum,
-        maximum,
-        mean
-    ]
+    return (minimum, maximum, mean)
 
 
-def run(db):
-    rows = db.last_24hrs()
-    try:
+def run(db, query_day):
+    day_str = query_day.strftime('%Y-%m-%d')
+    day_row = db.get_day(day_str)
+
+    if day_row:
+        return day_row
+    else:
+        rows = db.get_readings_specific_day(day_str)
+        data = list()
+
         if len(rows) > 1:
-            day = min_max_mean(rows)
-            data = [datetime.date.today() - timedelta(days=1)] + day
+            mmm = min_max_mean(rows)
+            data = [day_str] + mmm
+        elif len(rows) == 1:
+            data = [
+                day_str,
+                rows[0][0],
+                rows[0][0],
+                rows[0][0]]
+
+        if data:
             success = db.insert_day(data)
+
             if success:
-                db.remove_old_readings()
-    except Exception as e:
-        with open(os.path.join(app_config.output_path + 'errorlog.txt'), 'a') as f:
-            f.write('error in daily.py: ' + str(e) + '\n')
-            f.close()
+                db.delete_readings(day_str)
+        else:
+            data = [
+                day_str,
+                'no data',
+                'no data',
+                'no data']
+        return [tuple(data)]

@@ -4,7 +4,7 @@ import os
 import datetime
 from datetime import timedelta
 
-import daily, model, monthly, app_config
+import daily, model, app_config
 from model import Model
 
 current_time = datetime.datetime.now()
@@ -38,12 +38,12 @@ class Test(TestCase):
         self.db_obj.store_temp([22.4, current_time])
         rows = self.db_obj.last_24hrs()
         result = daily.min_max_mean(rows)
-        self.assertEqual(result, [22.2, 22.4, 22.3])
+        self.assertEqual(result, (22.2, 22.4, 22.3))
 
-    def test_remove_old_readings(self):
+    def test_delete_readings(self):
         self.db_obj.store_temp([22.2, current_time])
-        self.db_obj.store_temp([33.3, current_time - timedelta(days=2)])
-        self.db_obj.remove_old_readings()
+        self.db_obj.store_temp([33.3, yesterday])
+        self.db_obj.delete_readings(yesterday.strftime('%Y-%m-%d'))
         result = self.db_obj.get_all_readings()
         self.assertEqual(result, [(22.2, current_time)])
 
@@ -55,7 +55,7 @@ class Test(TestCase):
         self.assertEqual(result[0][0], yesterday.date())
         self.assertEqual(list(result[0][1:4]), [20.0, 21.0, 20.2])
 
-    def test_remove_days(self):
+    def test_get_all_days(self):
         test_date = datetime.date(2016, 3, 24)
         values1 = [test_date, 19.0, 22.0, 20.5]
         self.db_obj.insert_day(values1)
@@ -67,7 +67,7 @@ class Test(TestCase):
         self.assertEqual(result[0][0], test_date)
         self.assertEqual(list(result[0][1:4]), [19.0, 22.0, 20.5])
 
-    def test_prev_month(self):
+    def test_get_month(self):
         test_date = datetime.date(2016, 3, 24)
         values1 = [test_date, 19.0, 22.0, 20.5]
         self.db_obj.insert_day(values1)
@@ -76,28 +76,20 @@ class Test(TestCase):
         self.assertEqual(result[0][0], test_date)
         self.assertEqual(list(result[0][1:4]), [19.0, 22.0, 20.5])
 
-    def test_minus_month(self):
-        self.assertRaises(ValueError, monthly.minus_month, 99)
-
     def test_daily(self):
-        self.db_obj.store_temp([-99, current_time])
+        self.db_obj.store_temp([9, current_time])
         self.db_obj.store_temp([20, yesterday])
-        self.db_obj.store_temp([21, yesterday])
-        self.db_obj.store_temp([22, yesterday])
-        self.db_obj.store_temp([99, current_time - timedelta(days=2)])
 
-        daily.run(self.db_obj)
+        daily.run(self.db_obj, yesterday)
         in_days = self.db_obj.get_all_days()
         readings = self.db_obj.get_all_readings()
+        print(in_days)
         self.assertEqual(in_days[0][0], yesterday.date())
-        self.assertEqual(len(readings), 4)
+        self.assertEqual(readings[0][1], current_time)
 
-    def test_monthly(self):
-        for day in range(1, 30):
-            values1 = [datetime.date(2016, current_time.month - 1, day), day, 22.0, 20.5]
-            self.db_obj.insert_day(values1)
-
-        monthly.run(self.db_obj)
+    def test_daily_nodata(self):
+        result = daily.run(self.db_obj, yesterday)
+        self.assertEqual(result[0][1], 'no data')
 
     def tearDown(self):
         self.db_obj.delete()

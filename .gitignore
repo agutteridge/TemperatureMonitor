@@ -1,3 +1,4 @@
+output/
 *.csv
 *.sh
 pi_db

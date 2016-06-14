@@ -5,11 +5,14 @@ from datetime import timedelta
 import re
 import random
 
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, send_file
 from flask_mail import Mail, Message
+from weasyprint import HTML
+from jinja2 import Environment, PackageLoader
 
-import daily, monthly, app_config, model
+import daily, app_config
 from model import Model
+from month_data import Month_data
 
 app = Flask(__name__,
             template_folder='./templates',
@@ -23,6 +26,7 @@ app.config.update(dict(
     MAIL_USERNAME=app_config.MAIL_USERNAME,
     MAIL_PASSWORD=app_config.MAIL_PASSWORD,
 ))
+jinja_env = Environment(loader=PackageLoader('view', 'templates'))
 _last_alert = datetime.datetime(1970, 1, 1)  # default when app starts
 
 
@@ -52,11 +56,11 @@ def data():
 
             if last_reading:
                 if last_reading[1].day != timestamp.day:
-                    daily.run(db)
+                    daily.run(db, last_reading)
 
             if last_day:
                 if last_day[0].month != timestamp.month:
-                    monthly.run(db)
+                    monthly(last_day.strftime('%Y-%m'), db)
 
             db.store_temp([temp, decoded_data['ts']])
 
@@ -110,37 +114,65 @@ def twentyfour():
     return jsonify(formatted_data)
 
 
-@app.route('/report/<month_year>', methods=['GET'])
-def reports(month_year):
-    pattern = re.compile(r'\A\d\d-\d\d\Z')
-    if pattern.match(month_year):
-        print('yay')
-    else:
-        print('boo')
+@app.route('/report/<year_month>', methods=['GET'])
+def reports(year_month):
+    pattern = re.compile(r'\A\d\d\d\d-\d\d\Z')
+    if pattern.match(year_month):
+        month_obj = Month_data(year_month)
+        data = month_obj.get_days(db)
+        if data:
+            create_pdf(data, year_month)
+
+            path = '%s/%s_log.pdf' % (app_config.output_path, year_month)
+            if os.path.isfile(path):
+                return send_file(path)
+
+    return 'Not a month we have data for!'
 
 
-def send_email(subject, body):
+def send_email(subject, body, pdf_path=""):
     mail_ext = Mail(app)
     mail_to_be_sent = Message(
         subject=subject,
         recipients=app_config.recipients,
         sender=app_config.sender)
     mail_to_be_sent.body = body
+
+    if pdf_path:
+        with app.open_resource(pdf_path) as fp:
+            mail_to_be_sent.attach(pdf_path, "application/pdf", fp.read())
+
     mail_ext.send(mail_to_be_sent)
+
+
+def create_pdf(data, year_month):
+    template = jinja_env.get_template('log_template.html')
+    pretty_month = datetime.datetime.strptime(
+        year_month, '%Y-%m').strftime('%B %Y')
+    html_out = template.render(data=data, month=pretty_month)
+    HTML(string=html_out).write_pdf(
+        '%s/%s_log.pdf' % (app_config.output_path, year_month))
+    return True
+
+
+def monthly(db, year_month):
+    month_obj = Month_data(year_month)
+    month_obj.get_days(db)
+    create_pdf(data, year_month)
+    path = '%s/%s_log.pdf' % (app_config.output_path, year_month)
+    send_email('Monthly report', str(year_month), attach_pdf=path)
 
 
 # Teardown function for when app context closes
 def teardown_appcontext(e):
+    if app.debug:
+        db.delete()
     if db is not None:
         db.close()
 
 if app.debug:
     db = Model('test_db')
-    # db.store_temp([random.uniform(-30, 30), datetime.datetime.now()])
-    # db.insert_day([datetime.date.today(),
-    #                random.uniform(-30, 30),
-    #                random.uniform(-30, 30),
-    #                random.uniform(-30, 30)])
+    db.store_temp([random.uniform(-30, 30), datetime.datetime.now()])
 else:
     db = Model('pi_temps')
     import logging

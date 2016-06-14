@@ -28,15 +28,18 @@ class Month_data():
 
         first_day = datetime.date(self.year, next_month, 1)
         last_day = first_day - timedelta(days=1)
-        return last_day.day()
+        return last_day.day
 
     # month_date in str format '%Y-%m'
-    def _check_days(self):
+    def _check_days(self, db):
         result = list()
         for d in range(1, self.num_days + 1):
-            day_row = daily.run((
-                datetime.date(self.year, self.month, d)))
-            result.append(day_row)
+            day_row = db.get_day(
+                datetime.date(self.year, self.month, d).strftime('%Y-%m-%d'))
+            if not day_row:
+                day_row = daily.run(
+                    db, (datetime.date(self.year, self.month, d)))
+            result.extend(day_row)
         return result
 
     # change format of days to e.g. 01 (Sat)
@@ -55,7 +58,7 @@ class Month_data():
         rows = db.get_month(self.string)
 
         if len(rows) != self.num_days:
-            rows = self._check_days
+            rows = self._check_days(db)
 
         pretty_rows = self._pretty_format(rows)
         return pretty_rows
