@@ -17,10 +17,10 @@ def min_max_mean(rows):
     for temp, date in rows:
         temps.append(temp)
     mean = float("{0:.1f}".format(statistics.mean(temps)))
-    return (minimum, maximum, mean)
+    return [minimum, maximum, mean]
 
 
-def run(db, query_day):
+def run(db, query_day, delete=False):
     day_str = query_day.strftime('%Y-%m-%d')
     day_row = db.get_day(day_str)
 
@@ -43,12 +43,9 @@ def run(db, query_day):
         if data:
             success = db.insert_day(data)
 
-            if success:
+            if success and delete:
                 db.delete_readings(day_str)
+
+            return [tuple(data)]
         else:
-            data = [
-                day_str,
-                'no data',
-                'no data',
-                'no data']
-        return [tuple(data)]
+            return [(query_day, 'no data', 'no data', 'no data')]

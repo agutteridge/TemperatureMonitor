@@ -38,7 +38,9 @@ class Month_data():
                 datetime.date(self.year, self.month, d).strftime('%Y-%m-%d'))
             if not day_row:
                 day_row = daily.run(
-                    db, (datetime.date(self.year, self.month, d)))
+                    db,
+                    (datetime.date(self.year, self.month, d)),
+                    delete=False)
             result.extend(day_row)
         return result
 

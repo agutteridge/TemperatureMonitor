@@ -17,7 +17,7 @@ from month_data import Month_data
 app = Flask(__name__,
             template_folder='./templates',
             static_folder='./static')
-app.debug = True
+# app.debug = True
 app.config.update(dict(
     MAIL_SERVER=app_config.MAIL_SERVER,
     MAIL_PORT=app_config.MAIL_PORT,
@@ -56,7 +56,7 @@ def data():
 
             if last_reading:
                 if last_reading[1].day != timestamp.day:
-                    daily.run(db, last_reading)
+                    daily.run(db, last_reading, delete=True)
 
             if last_day:
                 if last_day[0].month != timestamp.month:
