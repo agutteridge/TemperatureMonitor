@@ -3,14 +3,14 @@ import json
 import datetime
 from datetime import timedelta
 import re
-import random
 
 from flask import Flask, request, jsonify, render_template, send_file
 from flask_mail import Mail, Message
 from weasyprint import HTML
 from jinja2 import Environment, PackageLoader
+from apscheduler.schedulers.background import BackgroundScheduler
 
-import daily, app_config
+import app_config
 from model import Model
 from month_data import Month_data
 
@@ -51,16 +51,6 @@ def data():
         try:
             decoded_data = json.loads(request.data.decode('utf-8'))
             temp = float(decoded_data['temp'])
-            last_reading = db.get_last_reading()
-            last_day = db.get_last_day()
-
-            if last_reading:
-                if last_reading[1].day != timestamp.day:
-                    daily.run(db, last_reading, delete=True)
-
-            if last_day:
-                if last_day[0].month != timestamp.month:
-                    monthly(last_day.strftime('%Y-%m'), db)
 
             db.store_temp([temp, decoded_data['ts']])
 
@@ -75,6 +65,7 @@ def data():
             with open(os.path.join(os.getcwd() + 'errorlog.txt'), 'a') as f:
                 f.write('exception: ' + str(e) + '\n')
                 f.close()
+            raise Exception
 
     return jsonify({'success': True})
 
@@ -155,7 +146,25 @@ def create_pdf(data, year_month):
     return True
 
 
-def monthly(db, year_month):
+def check_monthly():
+    today = datetime.today()
+
+    if today.day == 1:
+        monthly()  # delete all readings apart fmor last 24 hours??
+
+
+def monthly():
+    today = datetime.today()
+
+    if today.month == 1:
+        last_month = 12
+        the_year = today.year - 1
+    else:
+        last_month = today.month - 1
+        the_year = self.year
+        #WIP
+
+    year_month = '%s-%s' % (str(), str())
     month_obj = Month_data(year_month)
     month_obj.get_days(db)
     create_pdf(data, year_month)
@@ -172,7 +181,6 @@ def teardown_appcontext(e):
 
 if app.debug:
     db = Model('test_db')
-    db.store_temp([random.uniform(-30, 30), datetime.datetime.now()])
 else:
     db = Model('pi_temps')
     import logging
@@ -180,6 +188,11 @@ else:
     file_handler = FileHandler('app.log')
     file_handler.setLevel(logging.WARNING)
     app.logger.addHandler(file_handler)
+
+    # Schedules check_monthly to be executed once per day
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(check_monthly, 'interval', days=1)
+    scheduler.start()
 
 if __name__ == '__main__':
     app.run()

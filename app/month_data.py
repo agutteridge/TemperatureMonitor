@@ -8,7 +8,7 @@
 import datetime
 from datetime import timedelta
 
-import daily
+import day_data
 
 
 class Month_data():
@@ -23,35 +23,44 @@ class Month_data():
     def _rhyme(self):
         if self.month == 12:
             next_month = 1
+            the_year = self.year + 1
         else:
             next_month = self.month + 1
+            the_year = self.year
 
-        first_day = datetime.date(self.year, next_month, 1)
+        first_day = datetime.date(the_year, next_month, 1)
         last_day = first_day - timedelta(days=1)
         return last_day.day
 
-    # month_date in str format '%Y-%m'
     def _check_days(self, db):
         result = list()
         for d in range(1, self.num_days + 1):
             day_row = db.get_day(
                 datetime.date(self.year, self.month, d).strftime('%Y-%m-%d'))
             if not day_row:
-                day_row = daily.run(
+                day_row = day_data.run(
                     db,
                     (datetime.date(self.year, self.month, d)),
                     delete=False)
             result.extend(day_row)
+        print(result)
         return result
 
     # change format of days to e.g. 01 (Sat)
     def _pretty_format(self, rows):
         pretty = list()
-        for r in rows:
+        # border case: list containing one tuple
+        if len(rows) == 1:
             new_row = list()
-            new_row.append(r[0].strftime('%d (%a)'))
-            new_row.extend(r[1:])
+            new_row.append(rows[0].strftime('%d (%a)'))
+            new_row.extend(rows[1:])
             pretty.append(new_row)
+        else:
+            for r in rows:
+                new_row = list()
+                new_row.append(r[0].strftime('%d (%a)'))
+                new_row.extend(r[1:])
+                pretty.append(new_row)
 
         return pretty
 
