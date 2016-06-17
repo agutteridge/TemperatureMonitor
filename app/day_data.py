@@ -6,6 +6,7 @@
 # Deletes individual readings with date from day before yesterday
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 import statistics
+import datetime
 
 
 # Calculate the mean, minimum and maximum temperatures for the last 24 hours
@@ -40,7 +41,7 @@ def run(db, query_day, delete=False):
                 rows[0][0],
                 rows[0][0]]
 
-        if data:
+        if data and query_day is not datetime.date.today():
             success = db.insert_day(data)
 
             if success and delete:
