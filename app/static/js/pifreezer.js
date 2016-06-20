@@ -55,15 +55,6 @@ httpGetAsync(document.baseURI + "daygraph", function(temp_data){
   }
 })
 
-readTimeInMs = data.date.getTime()
-readTimeInSeconds = readTimeInMs % 60
-readTimeInMins = Math.floor(readTimeInMs / 60)
-timeAgo = ""
-if (readTimeInMins > 0) {
-  timeAgo += str(readTimeInMins) += " minutes and "
-}
-timeAgo += str(readTimeInSeconds) += " seconds ago"
-
 // REPORTS
 var btn_submit = document.getElementById("btn_submit");
 
