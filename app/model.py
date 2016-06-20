@@ -14,10 +14,6 @@ class Model():
                (Day DATE, Min REAL, Max REAL, Mean REAL)''',
             commit=True)
 
-    def check_if_str(self, obj):
-        if type(obj) is not str:
-            raise Exception('pass in a strftime string please')
-
     def execute_query(self, query, data=None, commit=False, fetch='no'):
         db = sqlite3.connect(
             self.db_name,
@@ -40,13 +36,34 @@ class Model():
         finally:
             c.close()
 
+    # Inserts row of data (temperature and timestamp) into Readings table
+    def store_temp(self, temp_datetime):
+        result = self.execute_query(
+            'INSERT INTO Readings VALUES (?, ?)',
+            data=temp_datetime,
+            commit=True)
+        return result
+
+    # Add day values to Days table
+    def insert_day(self, data):
+        self.execute_query(
+            'INSERT INTO Days VALUES (?, ?, ?, ?)',
+            data=data,
+            commit=True)
+        return True
+
     def get_all_readings(self):
         result = self.execute_query(
             'SELECT * FROM Readings',
             fetch='all')
         return result
 
-    # Returns latest row of Readings table
+    def get_all_days(self):
+        result = self.execute_query(
+            'SELECT * FROM Days ORDER BY Day',
+            fetch='all')
+        return result
+
     def get_last_reading(self):
         result = self.execute_query(
             'SELECT * FROM Readings ORDER BY DateAndTime DESC LIMIT 1',
@@ -59,91 +76,47 @@ class Model():
             fetch='one')
         return result
 
-    # Inserts row of data (temperature and timestamp) into Readings table
-    def store_temp(self, temp_datetime):
-        result = self.execute_query(
-            'INSERT INTO Readings VALUES (?, ?)',
-            data=temp_datetime,
-            commit=True)
-        return result
-
-    # Returns all rows containing temperature data from the last 24 hours
-    def last_24hrs(self):
+    # Return Readings within a time window
+    def get_readings(self, start, end):
         result = self.execute_query(
             '''SELECT *
                FROM Readings
-               WHERE DATETIME(DateAndTime) >= DATETIME('now', '-23 hours')
+               WHERE DATETIME(DateAndTime) >= DATETIME(?)
+               AND DATETIME(DateAndTime) <= DATETIME(?)
                ORDER BY DateAndTime''',
-            fetch='all')
-        return result
-
-    # Add day values to Days table
-    def insert_day(self, data):
-        self.execute_query(
-            'INSERT INTO Days VALUES (?, ?, ?, ?)',
-            data=data,
-            commit=True)
-        return True
-
-    # Deletes all rows with specific date from the database
-    def delete_readings(self, query_day):
-        self.check_if_str(query_day)
-
-        self.execute_query(
-            '''DELETE FROM Readings
-               WHERE STRFTIME('%Y-%m-%d', DateAndTime) = (?)''',
-            data=(query_day,),
-            commit=True)
-        return True
-
-    def get_all_days(self):
-        result = self.execute_query(
-            'SELECT * FROM Days ORDER BY Day',
-            fetch='all')
-        return result
-
-    # retrieve rows from Readings table
-    def get_readings_specific_day(self, query_day):
-        self.check_if_str(query_day)
-
-        result = self.execute_query(
-            '''SELECT *
-               FROM Readings
-               WHERE STRFTIME('%Y-%m-%d', DateAndTime) = (?)''',
-            data=(query_day,),
+            data=sorted([start, end]),
             fetch='all')
         return result
 
     # retrieve single row (or empty list) from Days table
-    def get_day(self, query_day):
-        self.check_if_str(query_day)
-
+    def get_days(self, start, end):
         result = self.execute_query(
             '''SELECT *
                FROM Days
-               WHERE STRFTIME('%Y-%m-%d', Day) = (?)''',
-            data=(query_day,),
+               WHERE DATE(Day) >= DATE(?)
+               AND DATE(Day) <= DATE(?)
+               ORDER BY Day''',
+            data=sorted([start, end]),
             fetch='all')
         return result
 
-    # Returns all rows containing temperature data from specified month
-    def get_month(self, query_month):
+    # Delete Readings within a time window
+    def delete_readings(self, start, end):
         result = self.execute_query(
-            '''SELECT *
-               FROM Days
-               WHERE STRFTIME('%Y-%m', Day) = (?)''',
-            data=(query_month,),
-            fetch='all')
-        return result
-
-    # Deletes all rows with specified month
-    def remove_days(self, query_month):
-        self.execute_query(
-            '''DELETE FROM Days
-               WHERE STRFTIME('%Y-%m', Day) = (?)''',
-            data=(query_month,),
+            '''DELETE FROM Readings
+               WHERE DATETIME(DateAndTime) >= DATETIME(?)
+               AND DATETIME(DateAndTime) <= DATETIME(?)''',
+            data=sorted([start, end]),
             commit=True)
-        return True
+        return result
+
+    # def delete_days(self, query_month):
+    #     self.execute_query(
+    #         '''DELETE FROM Days
+    #            WHERE STRFTIME('%Y-%m', Day) = (?)''',
+    #         data=(query_month,),
+    #         commit=True)
+    #     return True
 
     # Testing only, teardown
     def delete(self):

@@ -1,3 +1,4 @@
+temp-venv/
 output/
 *.csv
 *.sh

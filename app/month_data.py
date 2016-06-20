@@ -18,6 +18,36 @@ class Month_data():
         self.year = int(year_month_list[0])
         self.month = int(year_month_list[1])
         self.num_days = self._rhyme()
+        # Datetime objects for start and end of the month
+        (self.start, self.end) = day_data.first_last(
+            datetime.datetime(self.year,
+                              self.month,
+                              1),
+            datetime.datetime(self.year,
+                              self.month,
+                              self.num_days))
+
+    # Deletes all Readings from this month from the database
+    def spring_clean(self, db):
+        db.delete_readings(self.start, self.end)
+
+    # Returns month_obj relative to self
+    # maximum timedelta is 12 months
+    def timedelta(self, num_months):
+        if num_months > 12:
+            raise ValueError('Function is not valid for this arg.')
+
+        new_month = self.month - num_months
+        new_year = self.year
+
+        if new_month < 1:
+            new_month += 12
+            new_year -= 1
+
+        if new_month < 10:
+            return Month_data(str(new_year) + '-0' + str(new_month))
+        else:
+            return Month_data(str(new_year) + '-' + str(new_month))
 
     # 30 days have September, April, June and November!
     def _rhyme(self):
@@ -34,40 +64,40 @@ class Month_data():
 
     def _check_days(self, db):
         result = list()
+        any_data = False
+
         for d in range(1, self.num_days + 1):
-            day_row = db.get_day(
-                datetime.date(self.year, self.month, d).strftime('%Y-%m-%d'))
+            d_date = datetime.date(self.year, self.month, d)
+            (day_start, day_end) = day_data.first_last(d_date, d_date)
+            day_row = db.get_days(day_start, day_end)
+
             if not day_row:
-                day_row = day_data.run(
-                    db,
-                    (datetime.date(self.year, self.month, d)),
-                    delete=False)
+                day_row = day_data.condense(db, d_date)
+                if 'no data' not in day_row[0]:
+                    any_data = True
+            else:
+                any_data = True
+
             result.extend(day_row)
-        print(result)
-        return result
+
+        if any_data:
+            return result
+        else:  # If there are no readings for this month, return empty list
+            return list()
 
     # change format of days to e.g. 01 (Sat)
     def _pretty_format(self, rows):
         pretty = list()
-        # border case: list containing one tuple
-        if len(rows) == 1:
+        for r in rows:
             new_row = list()
-            new_row.append(rows[0].strftime('%d (%a)'))
-            new_row.extend(rows[1:])
+            new_row.append(r[0].strftime('%d (%a)'))
+            new_row.extend(r[1:])
             pretty.append(new_row)
-        else:
-            for r in rows:
-                new_row = list()
-                new_row.append(r[0].strftime('%d (%a)'))
-                new_row.extend(r[1:])
-                pretty.append(new_row)
 
         return pretty
 
-    # month_date in str format '%Y-%m'
     def get_days(self, db):
-        rows = db.get_month(self.string)
-
+        rows = db.get_days(self.start.date(), self.end.date())
         if len(rows) != self.num_days:
             rows = self._check_days(db)
 

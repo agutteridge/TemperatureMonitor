@@ -2,6 +2,13 @@
 @import url(https://fonts.googleapis.com/css?family=Lato:100);
 
 .big-box {
+ 	display: -webkit-flex;
+  	display: flex;
+}
+
+.column {
+    -webkit-flex: 1;
+    flex: 1;
 	display: flex;
 	flex-direction:	column;
 	flex-wrap: nowrap;
@@ -16,6 +23,11 @@
 
 .header-box {
 	align-items: top;
+	align-content: center;
+}
+
+.form-box {
+	padding-top: 20px;
 }
 
 .temp-box {
@@ -24,15 +36,74 @@
 	text-align: center;
 }
 
-.graph-box {
-	height: 300px;
+.msg {
+	font-family: 'Lato', sans-serif;
+	font-size: 12px;
+	text-align: center;
+	color: red;
+}
+
+.sidenav {
+	font-family: 'Lato', sans-serif;
+    height: 100%;
+    width: 0;
+    position: fixed;
+    z-index: 1;
+    top: 0;
+    left: 0;
+    background-color: #111;
+    overflow-x: hidden;
+    transition: 0.5s;
+    padding-top: 60px;
+}
+
+.sidenav a {
+    padding: 8px 8px 8px 32px;
+    text-decoration: none;
+    font-size: 25px;
+    color: #818181;
+    display: block;
+    transition: 0.3s
+}
+
+.sidenav a:hover, .offcanvas a:focus{
+    color: #f1f1f1;
+}
+
+.closebtn {
+    position: absolute;
+    top: 0;
+    right: 25px;
+    font-size: 36px !important;
+    margin-left: 50px;
+}
+
+@media screen and (max-height: 450px) {
+  .sidenav {padding-top: 15px;}
+  .sidenav a {font-size: 18px;}
 }
 
 h1 {
 	font-family: 'Asap', sans-serif;
 	font-size: 56px;
-	text-align: left;
+	text-align: center;
 	margin-top: 5px;
 	margin-bottom: 5px;
 }
 
+h2 {
+	font-family: 'Asap', sans-serif;
+	font-size: 28px;
+	text-align: center;
+	margin-top: 5px;
+	margin-bottom: 5px;	
+}
+
+span {
+	font-family: 'Lato', sans-serif;
+	font-weight: bold;
+}
+
+nav {
+	width: 200px;
+}
