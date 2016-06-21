@@ -45,6 +45,11 @@ def index():
         return render_template('index.html', data=None)
 
 
+@app.route('/about', methods=['GET'])
+def about():
+    return render_template('about.html')
+
+
 @app.route('/data', methods=['POST'])
 def data():
     timestamp = datetime.datetime.now()

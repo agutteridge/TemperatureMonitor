@@ -78,7 +78,7 @@ class FlaskrTestCase(unittest.TestCase):
         self.assertEqual(len(result), 10)
 
     def test_report_no_data(self):
-        r = self.app.get('/report/1970-01')
+        r = self.app.get('/reports/1970-01')
         self.assertTrue(b'Not a month we have data for!' in r.data)
 
     def test_report_one_reading(self):
@@ -88,7 +88,7 @@ class FlaskrTestCase(unittest.TestCase):
             'temp': -20,
             'ts': date_str}))
 
-        r = self.app.get('/report/1970-01')
+        r = self.app.get('/reports/1970-01')
         self.assertEqual(r.mimetype, 'application/pdf')
 
 if __name__ == '__main__':

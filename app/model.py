@@ -118,6 +118,12 @@ class Model():
     #         commit=True)
     #     return True
 
+    def get_first_reading(self):
+        result = self.execute_query(
+            'SELECT * FROM Readings ORDER BY DateAndTime DESC LIMIT 1',
+            fetch='one')
+        return result
+
     # Testing only, teardown
     def delete(self):
         self.execute_query(

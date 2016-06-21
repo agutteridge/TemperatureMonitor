@@ -10,8 +10,9 @@
 			<!-- Side navigation drawer -->
 			<div id="mySidenav" class="sidenav">
 				<a href="javascript:void(0)" class="closebtn" onclick="closeNav()">×</a>
-			 	<a href="about">About</a>
-			  	<a href="reports">Reports</a>
+			  	<a href="/" id="home">Home</a>
+			  	<a href="reports" id="reports">Reports</a>
+			 	<a href="about" id="about">About</a>
 			</div>
 		</nav>
 		<div class="big-box">
@@ -48,6 +49,6 @@
 			</div>
 		</div>
     <!-- JavaScript -->
-    <script src="{{url_for('static', filename='js/pifreezer.js')}}" type="text/javascript"></script>
+    <script src="{{url_for('static', filename='js/reports.js')}}" type="text/javascript"></script>
 	</body>
 </html>
