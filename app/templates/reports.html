@@ -1,54 +1,38 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-		<meta charset="utf-8">
-		<link rel="stylesheet" type="text/css" href="{{url_for('static', filename='css/index.css')}}">
- 	</head>
-	<body>
-		<nav>
-			<span style="font-size:30px;cursor:pointer" onclick="openNav()">☰</span>
-			<!-- Side navigation drawer -->
-			<div id="mySidenav" class="sidenav">
-				<a href="javascript:void(0)" class="closebtn" onclick="closeNav()">×</a>
-			  	<a href="/" id="home">Home</a>
-			  	<a href="reports" id="reports">Reports</a>
-			 	<a href="about" id="about">About</a>
-			</div>
-		</nav>
-		<div class="big-box">
-			<div class="column">
-				<section class="header-box">
-					<h1>PiFreezer</h1>
-					<h2>Monthly reports</h2>
-				</section>
-				<section class="form-box">
-					<select name="year-dropdown" id="year-dropdown">
-						<option selected="selected">Year</option>
-						{% for num in range(0, 2) %}
-							<option value="{{data.year - num}}">{{data.year - num}}</option>
-						{% endfor %}
-					</select>
-					<select name="month-dropdown" id=month-dropdown>
-						<option selected="selected">Month</option>
-						<option value="January">January</option>
-						<option value="February">February</option>
-						<option value="March">March</option>
-						<option value="April">April</option>
-						<option value="May">May</option>
-						<option value="June">June</option>
-						<option value="July">July</option>
-						<option value="August">August</option>
-						<option value="September">September</option>
-						<option value="October">October</option>
-						<option value="November">November</option>
-						<option value="December">December</option>
-					</select>
-			        <button type="button" class="text_btns" id="btn_submit">Submit</button>
-			        <div class="msg" id="message"></div>
-				</section>
-			</div>
+{% extends "layout.html" %}
+{% block body %}
+	<div class="big-box">
+		<div class="column">
+			<section class="header-box">
+				<h1>PiFreezer</h1>
+				<h2>Monthly reports</h2>
+			</section>
+			<section class="form-box">
+				<select name="year-dropdown" id="year-dropdown">
+					<option selected="selected">Year</option>
+					{% for num in range(0, 2) %}
+						<option value="{{data.year - num}}">{{data.year - num}}</option>
+					{% endfor %}
+				</select>
+				<select name="month-dropdown" id=month-dropdown>
+					<option selected="selected">Month</option>
+					<option value="January">January</option>
+					<option value="February">February</option>
+					<option value="March">March</option>
+					<option value="April">April</option>
+					<option value="May">May</option>
+					<option value="June">June</option>
+					<option value="July">July</option>
+					<option value="August">August</option>
+					<option value="September">September</option>
+					<option value="October">October</option>
+					<option value="November">November</option>
+					<option value="December">December</option>
+				</select>
+		        <button type="button" class="text_btns" id="btn_submit">Submit</button>
+		        <div class="msg" id="message"></div>
+			</section>
 		</div>
-    <!-- JavaScript -->
-    <script src="{{url_for('static', filename='js/reports.js')}}" type="text/javascript"></script>
-	</body>
-</html>
+	</div>
+	<!-- JavaScript -->
+	<script src="{{url_for('static', filename='js/reports.js')}}" type="text/javascript"></script>
+{% endblock %}
